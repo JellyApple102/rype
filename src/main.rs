@@ -14,7 +14,7 @@ fn main() -> Result<(), io::Error> {
             .title("rype")
             .borders(Borders::ALL)
             .border_type(BorderType::Rounded);
-        // f.render_widget(main_chunk, f.size());
+        f.render_widget(main_chunk, f.size());
 
         let chunks = Layout::default()
             .direction(Direction::Vertical)
@@ -28,41 +28,47 @@ fn main() -> Result<(), io::Error> {
             )
             .split(f.size());
 
-        f.render_widget(main_chunk, f.size());
+        let game_chunks = Layout::default()
+            .direction(Direction::Vertical)
+            .horizontal_margin(chunks[1].width / 5)
+            .vertical_margin(chunks[1].height / 5)
+            .constraints(
+                [
+                Constraint::Ratio(1, 3), // timer chunk
+                Constraint::Ratio(1, 3), // typing chunk
+                Constraint::Ratio(1, 3)  // padding chunk, not visible
+                ].as_ref()
+            )
+            .split(chunks[1]);
+
+        let timer_chunks = Layout::default()
+            .direction(Direction::Vertical)
+            .constraints(
+                [
+                Constraint::Min(0),   // padding chunk, not visible
+                Constraint::Length(1) // timer chunk
+                ].as_ref()
+            )
+            .split(game_chunks[0]);
 
         let header = Paragraph::new("Header")
             .block(Block::default().borders(Borders::ALL).border_type(BorderType::Rounded))
             .alignment(Alignment::Center);
         f.render_widget(header, chunks[0]);
 
-        // main block
-        // let block = Block::default()
-        //     .title("")
+        let timer = Paragraph::new("timer here")
+            .alignment(Alignment::Left);
+        f.render_widget(timer, timer_chunks[1]);
+
+        let typing_section = Paragraph::new("type here")
+            .block(Block::default().borders(Borders::ALL).border_type(BorderType::Rounded))
+            .alignment(Alignment::Left);
+        f.render_widget(typing_section, game_chunks[1]);
+
+        // let padding_block = Block::default()
         //     .borders(Borders::ALL)
         //     .border_type(BorderType::Rounded);
-        // f.render_widget(block, chunks[1]);
-
-        let game_chunks = Layout::default()
-            .direction(Direction::Vertical)
-            .horizontal_margin(chunks[1].width - (chunks[1].width - 10))
-            .vertical_margin(chunks[1].height - (chunks[1].height - 5))
-            .constraints(
-                [
-                Constraint::Percentage(50),
-                Constraint::Percentage(50)
-                ].as_ref()
-            )
-            .split(chunks[1]);
-
-        let block = Block::default()
-            .borders(Borders::ALL)
-            .border_type(BorderType::Rounded);
-        f.render_widget(block, game_chunks[0]);
-
-        let block = Block::default()
-            .borders(Borders::ALL)
-            .border_type(BorderType::Rounded);
-        f.render_widget(block, game_chunks[1]);
+        // f.render_widget(padding_block, game_chunks[2]);
 
         let footer = Paragraph::new("Footer")
             .block(Block::default().borders(Borders::ALL).border_type(BorderType::Rounded))
