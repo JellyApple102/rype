@@ -15,6 +15,10 @@ enum Event<I> {
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // check getting list of words
+    let words: Vec<&str> = include!("words.txt");
+    println!("{}", words.len());
+
     // basic setup
     let stdout = io::stdout();
     let backend = CrosstermBackend::new(stdout);
@@ -104,11 +108,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 .block(Block::default().borders(Borders::ALL).border_type(BorderType::Rounded))
                 .alignment(Alignment::Left);
             f.render_widget(typing_section, game_chunks[1]);
-
-            // let padding_block = Block::default()
-            //     .borders(Borders::ALL)
-            //     .border_type(BorderType::Rounded);
-            // f.render_widget(padding_block, game_chunks[2]);
 
             let footer = Paragraph::new("Footer")
                 .block(Block::default().borders(Borders::ALL).border_type(BorderType::Rounded))
