@@ -1,14 +1,21 @@
-use std::io;
-use tui::{Frame, Terminal};
-use tui::backend::{Backend, CrosstermBackend};
-use tui::widgets::{Block, BorderType, Borders, Paragraph};
-use tui::layout::{Alignment, Constraint, Direction, Layout, Rect};
-use tui::style::{Style, Color};
-use crossterm::terminal::{enable_raw_mode, disable_raw_mode};
-use crossterm::event::{self, Event as CEvent, KeyCode};
-use std::sync::mpsc;
-use std::thread;
-use std::time::{Duration, Instant};
+use std::{
+    io,
+    thread,
+    sync::mpsc,
+    time::{Duration, Instant}
+};
+use tui::{
+    Terminal,
+    backend::CrosstermBackend,
+    widgets::{Block, BorderType, Borders, Paragraph},
+    layout::{Alignment, Constraint, Direction, Layout}
+};
+use crossterm::{
+    terminal::{enable_raw_mode, disable_raw_mode},
+    event::{self, Event as CEvent, KeyCode}
+};
+
+mod ui;
 
 enum Event<I> {
     Input(I),
@@ -29,8 +36,8 @@ enum GameState {
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     // check getting list of words
-    let words: Vec<&str> = include!("words.txt");
-    println!("{}", words.len());
+    // let words: Vec<&str> = include!("words.txt");
+    // println!("{}", words.len());
 
     // basic setup
     let stdout = io::stdout();
@@ -55,10 +62,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 }
             }
 
-            if last_tick.elapsed() >= tick_rate {
-                if let Ok(_) = tx.send(Event::Tick) {
-                    last_tick = Instant::now();
-                }
+            if last_tick.elapsed() >= tick_rate && tx.send(Event::Tick).is_ok() {
+                last_tick = Instant::now();
             }
         }
     });
@@ -122,16 +127,16 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
             match focused_window {
                 FocusedWindow::GameOptions => {
-                    render_game_options(f, header_chunks[0], true);
-                    render_timer_options(f, header_chunks[1], false);
+                    ui::render_game_options(f, header_chunks[0], true);
+                    ui::render_timer_options(f, header_chunks[1], false);
                 },
                 FocusedWindow::TimerOptions => {
-                    render_game_options(f, header_chunks[0], false);
-                    render_timer_options(f, header_chunks[1], true);
+                    ui::render_game_options(f, header_chunks[0], false);
+                    ui::render_timer_options(f, header_chunks[1], true);
                 },
                 FocusedWindow::Game => {
-                    render_game_options(f, header_chunks[0], false);
-                    render_timer_options(f, header_chunks[1], false);
+                    ui::render_game_options(f, header_chunks[0], false);
+                    ui::render_timer_options(f, header_chunks[1], false);
                 }
             }
 
@@ -165,46 +170,4 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     }
     Ok(())
-}
-
-fn render_game_options<B: Backend>(f: &mut Frame<B>, area: Rect, focused: bool) {
-    if focused {
-        let game_options_tabs = Paragraph::new("game options here")
-            .block(Block::default()
-                   .borders(Borders::LEFT | Borders::TOP | Borders::BOTTOM)
-                   .border_type(BorderType::Rounded)
-                   .border_style(Style::default().fg(Color::Red)))
-            .alignment(Alignment::Left);
-
-        f.render_widget(game_options_tabs, area);
-    } else {
-        let game_options_tabs = Paragraph::new("game options here")
-            .block(Block::default()
-                   .borders(Borders::LEFT | Borders::TOP | Borders::BOTTOM)
-                   .border_type(BorderType::Rounded))
-            .alignment(Alignment::Left);
-
-        f.render_widget(game_options_tabs, area);
-    }
-}
-
-fn render_timer_options<B: Backend>(f: &mut Frame<B>, area: Rect, focused: bool) {
-    if focused {
-        let timer_options_tabs = Paragraph::new("timer options here")
-            .block(Block::default()
-                   .borders(Borders::RIGHT | Borders::TOP | Borders::BOTTOM)
-                   .border_type(BorderType::Rounded)
-                   .border_style(Style::default().fg(Color::Red)))
-            .alignment(Alignment::Right);
-
-        f.render_widget(timer_options_tabs, area);
-    } else {
-        let timer_options_tabs = Paragraph::new("timer options here")
-            .block(Block::default()
-                   .borders(Borders::RIGHT | Borders::TOP | Borders::BOTTOM)
-                   .border_type(BorderType::Rounded))
-            .alignment(Alignment::Right);
-
-        f.render_widget(timer_options_tabs, area);
-    }
 }
