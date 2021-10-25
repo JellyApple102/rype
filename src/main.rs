@@ -22,12 +22,6 @@ enum Event<I> {
     Tick
 }
 
-enum FocusedWindow {
-    GameOptions,
-    TimerOptions,
-    Game
-}
-
 enum GameState {
     Pre,
     During,
@@ -68,7 +62,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     });
 
-    let focused_window = FocusedWindow::Game;
+    let mut focused_window = ui::FocusedWindow::Game;
     let game_state = GameState::Pre;
 
     // draw loop
@@ -125,20 +119,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 )
                 .split(chunks[0]);
 
-            match focused_window {
-                FocusedWindow::GameOptions => {
-                    ui::render_game_options(f, header_chunks[0], true);
-                    ui::render_timer_options(f, header_chunks[1], false);
-                },
-                FocusedWindow::TimerOptions => {
-                    ui::render_game_options(f, header_chunks[0], false);
-                    ui::render_timer_options(f, header_chunks[1], true);
-                },
-                FocusedWindow::Game => {
-                    ui::render_game_options(f, header_chunks[0], false);
-                    ui::render_timer_options(f, header_chunks[1], false);
-                }
-            }
+            ui::render_header_widgets(f, header_chunks[0], header_chunks[1], &focused_window);
 
             let typing_section = Paragraph::new("type here")
                 // .block(Block::default().borders(Borders::ALL).border_type(BorderType::Rounded))
@@ -156,15 +137,52 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         })?;
 
         // input handling
+        // match rx.recv()? {
+        //     Event::Input(event) => match event.code {
+        //         KeyCode::Esc => {
+        //             disable_raw_mode()?;
+        //             terminal.show_cursor()?;
+        //             break;
+        //         },
+        //         KeyCode::Enter => {},
+        //         _ => {}
+        //     },
+        //     Event::Tick => {}
+        // }
+
         match rx.recv()? {
-            Event::Input(event) => match event.code {
-                KeyCode::Esc => {
-                    disable_raw_mode()?;
-                    terminal.show_cursor()?;
-                    break;
+            Event::Input(event) => match game_state {
+                GameState::Pre => match event.code {
+                    KeyCode::Esc => {
+                        disable_raw_mode()?;
+                        terminal.show_cursor()?;
+                        break;
+                    },
+                    KeyCode::Tab => focused_window = focused_window.next(),
+                    KeyCode::BackTab => focused_window = focused_window.prev(),
+                    KeyCode::Left => {},
+                    KeyCode::Right => {},
+                    _ => {}
                 },
-                KeyCode::Enter => {}
-                _ => {}
+                GameState::During => match event.code {
+                    KeyCode::Esc => {
+                        disable_raw_mode()?;
+                        terminal.show_cursor()?;
+                        break;
+                    },
+                    KeyCode::Char(c) => {},
+                    KeyCode::Backspace => {},
+                    _ => {}
+                },
+                GameState::Post => match event.code {
+                    KeyCode::Esc => {
+                        disable_raw_mode()?;
+                        terminal.show_cursor()?;
+                        break;
+                    },
+                    KeyCode::Enter => {},
+                    _ => {}
+                }
             },
             Event::Tick => {}
         }
