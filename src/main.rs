@@ -6,30 +6,27 @@ use std::{
 };
 use tui::{
     Terminal,
-    backend::CrosstermBackend,
-    widgets::{Block, BorderType, Borders, Paragraph},
-    layout::{Alignment, Constraint, Direction, Layout}
+    backend::CrosstermBackend
 };
 use crossterm::{
     terminal::{enable_raw_mode, disable_raw_mode},
     event::{self, Event as CEvent, KeyCode}
 };
 
+use app::App;
+use app::GameState;
+
 mod ui;
+mod app;
 
 enum Event<I> {
     Input(I),
     Tick
 }
 
-enum GameState {
-    Pre,
-    During,
-    Post
-}
-
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     // check getting list of words
+    // this kills compile time - should chek if i can do anything about that
     // let words: Vec<&str> = include!("words.txt");
     // println!("{}", words.len());
 
@@ -62,113 +59,27 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     });
 
-    let mut focused_window = ui::FocusedWindow::Game;
-    let game_state = GameState::Pre;
+    let mut app = App::new();
 
     // draw loop
     loop {
-        terminal.draw(|f| {
-            let title_chunk = Block::default()
-                .title("rype")
-                .borders(Borders::ALL)
-                .border_type(BorderType::Rounded);
-            f.render_widget(title_chunk, f.size());
-
-            let chunks = Layout::default()
-                .direction(Direction::Vertical)
-                .margin(1)
-                .constraints(
-                    [
-                    Constraint::Length(3), // header chunk
-                    Constraint::Min(0),    // game chunks
-                    Constraint::Length(3)  // footer chunk
-                    ].as_ref()
-                )
-                .split(f.size());
-
-            let game_chunks = Layout::default()
-                .direction(Direction::Vertical)
-                .horizontal_margin(chunks[1].width / 5)
-                .vertical_margin(chunks[1].height / 5)
-                .constraints(
-                    [
-                    Constraint::Ratio(1, 3), // timer chunk
-                    Constraint::Ratio(1, 3), // typing chunk
-                    Constraint::Ratio(1, 3)  // padding chunk, not visible
-                    ].as_ref()
-                )
-                .split(chunks[1]);
-
-            let timer_chunks = Layout::default()
-                .direction(Direction::Vertical)
-                .constraints(
-                    [
-                    Constraint::Min(0),   // padding chunk, not visible
-                    Constraint::Length(1) // timer chunk
-                    ].as_ref()
-                )
-                .split(game_chunks[0]);
-
-            let header_chunks = Layout::default()
-                .direction(Direction::Horizontal)
-                .constraints(
-                    [
-                    Constraint::Percentage(50),
-                    Constraint::Percentage(50)
-                    ].as_ref()
-                )
-                .split(chunks[0]);
-
-            ui::render_header_widgets(f, header_chunks[0], header_chunks[1], &focused_window);
-
-            let typing_section = Paragraph::new("type here")
-                // .block(Block::default().borders(Borders::ALL).border_type(BorderType::Rounded))
-                .alignment(Alignment::Left);
-            f.render_widget(typing_section, game_chunks[1]);
-
-            let timer = Paragraph::new("timer here")
-                .alignment(Alignment::Left);
-            f.render_widget(timer, timer_chunks[1]);
-
-            let footer = Paragraph::new("Footer")
-                .block(Block::default().borders(Borders::ALL).border_type(BorderType::Rounded))
-                .alignment(Alignment::Center);
-            f.render_widget(footer, chunks[2]);
-        })?;
-
-        // input handling
-        // match rx.recv()? {
-        //     Event::Input(event) => match event.code {
-        //         KeyCode::Esc => {
-        //             disable_raw_mode()?;
-        //             terminal.show_cursor()?;
-        //             break;
-        //         },
-        //         KeyCode::Enter => {},
-        //         _ => {}
-        //     },
-        //     Event::Tick => {}
-        // }
+        terminal.draw(|f| ui::draw(f, &mut app))?;
 
         match rx.recv()? {
-            Event::Input(event) => match game_state {
+            Event::Input(event) => match app.state {
                 GameState::Pre => match event.code {
                     KeyCode::Esc => {
-                        disable_raw_mode()?;
-                        terminal.show_cursor()?;
-                        break;
+                        app.should_quit = true;
                     },
-                    KeyCode::Tab => focused_window = focused_window.next(),
-                    KeyCode::BackTab => focused_window = focused_window.prev(),
+                    KeyCode::Tab => app.focused_window = app.focused_window.next(),
+                    KeyCode::BackTab => app.focused_window = app.focused_window.prev(),
                     KeyCode::Left => {},
                     KeyCode::Right => {},
                     _ => {}
                 },
                 GameState::During => match event.code {
                     KeyCode::Esc => {
-                        disable_raw_mode()?;
-                        terminal.show_cursor()?;
-                        break;
+                        app.should_quit = true;
                     },
                     KeyCode::Char(c) => {},
                     KeyCode::Backspace => {},
@@ -176,15 +87,20 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 },
                 GameState::Post => match event.code {
                     KeyCode::Esc => {
-                        disable_raw_mode()?;
-                        terminal.show_cursor()?;
-                        break;
+                        app.should_quit = true;
                     },
                     KeyCode::Enter => {},
                     _ => {}
                 }
             },
             Event::Tick => {}
+        }
+
+        if app.should_quit {
+            disable_raw_mode()?;
+            terminal.clear()?;
+            terminal.show_cursor()?;
+            break;
         }
     }
     Ok(())
