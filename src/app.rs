@@ -12,6 +12,22 @@ impl App {
             focused_window: FocusedWindow::Game
         }
     }
+
+    pub fn cycle_focus_forward(&mut self) {
+        match self.focused_window {
+            FocusedWindow::Game => self.focused_window = FocusedWindow::GameOptions,
+            FocusedWindow::GameOptions => self.focused_window = FocusedWindow::TimerOptions,
+            FocusedWindow::TimerOptions => self.focused_window = FocusedWindow::Game
+        }
+    }
+
+    pub fn cycle_focus_backward(&mut self) {
+        match self.focused_window {
+            FocusedWindow::Game => self.focused_window = FocusedWindow::TimerOptions,
+            FocusedWindow::GameOptions => self.focused_window = FocusedWindow::Game,
+            FocusedWindow::TimerOptions => self.focused_window = FocusedWindow::GameOptions
+        }
+    }
 }
 
 #[allow(dead_code)]
@@ -25,22 +41,4 @@ pub enum FocusedWindow {
    GameOptions,
    TimerOptions,
    Game
-}
-
-impl FocusedWindow {
-    pub fn next(self) -> FocusedWindow {
-        match self {
-            FocusedWindow::Game => FocusedWindow::GameOptions,
-            FocusedWindow::GameOptions => FocusedWindow::TimerOptions,
-            FocusedWindow::TimerOptions => FocusedWindow::Game
-        }
-    }
-
-    pub fn prev(self) -> FocusedWindow {
-        match self {
-            FocusedWindow::Game => FocusedWindow::TimerOptions,
-            FocusedWindow::GameOptions => FocusedWindow::Game,
-            FocusedWindow::TimerOptions => FocusedWindow::GameOptions
-        }
-    }
 }

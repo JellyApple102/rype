@@ -71,8 +71,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     KeyCode::Esc => {
                         app.should_quit = true;
                     },
-                    KeyCode::Tab => app.focused_window = app.focused_window.next(),
-                    KeyCode::BackTab => app.focused_window = app.focused_window.prev(),
+                    KeyCode::Tab => app.cycle_focus_forward(),
+                    KeyCode::BackTab => app.cycle_focus_backward(),
                     KeyCode::Left => {},
                     KeyCode::Right => {},
                     _ => {}

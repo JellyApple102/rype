@@ -110,7 +110,7 @@ fn render_timer_options<B: Backend>(f: &mut Frame<B>, area: Rect, focused: bool)
     f.render_widget(timer_options_tabs, area);
 }
 
-pub fn render_header_widgets<B: Backend>(f: &mut Frame<B>, options_area: Rect, timer_area: Rect, app: &App) {
+fn render_header_widgets<B: Backend>(f: &mut Frame<B>, options_area: Rect, timer_area: Rect, app: &App) {
     match app.focused_window {
         FocusedWindow::Game => {
             render_game_options(f, options_area, false);
