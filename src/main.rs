@@ -13,11 +13,11 @@ use crossterm::{
     event::{self, Event as CEvent, KeyCode}
 };
 
-use app::App;
-use app::GameState;
-
 mod ui;
 mod app;
+
+use app::App;
+use app::GameState;
 
 enum Event<I> {
     Input(I),
@@ -73,8 +73,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     },
                     KeyCode::Tab => app.cycle_focus_forward(),
                     KeyCode::BackTab => app.cycle_focus_backward(),
-                    KeyCode::Left => {},
-                    KeyCode::Right => {},
+                    KeyCode::Left => app.cycle_tab_backward(),
+                    KeyCode::Right => app.cycle_tab_forward(),
                     _ => {}
                 },
                 GameState::During => match event.code {

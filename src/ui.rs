@@ -1,9 +1,10 @@
 use tui::{
     Frame,
     backend::Backend,
-    widgets::{Block, BorderType, Borders, Paragraph},
+    widgets::{Block, BorderType, Borders, Paragraph, Tabs},
     layout::{Alignment, Rect, Layout, Direction, Constraint},
-    style::{Style, Color}
+    style::{Style, Color},
+    text::Spans
 };
 
 use super::App;
@@ -78,9 +79,11 @@ pub fn draw<B: Backend>(f: &mut Frame<B>, app: &mut App) {
     f.render_widget(footer, chunks[2]);
 }
 
-fn render_game_options<B: Backend>(f: &mut Frame<B>, area: Rect, focused: bool) {
-    let mut game_options_tabs = Paragraph::new("game options here")
-        .alignment(Alignment::Left);
+fn render_game_options<B: Backend>(f: &mut Frame<B>, area: Rect, focused: bool, app: &App) {
+    let options = app.game_options.iter().cloned().map(Spans::from).collect();
+    let mut game_options_tabs = Tabs::new(options)
+        .select(app.selected_game_tab)
+        .highlight_style(Style::default().fg(Color::Green));
 
     let mut b = Block::default()
         .borders(Borders::LEFT | Borders::TOP | Borders::BOTTOM)
@@ -94,9 +97,11 @@ fn render_game_options<B: Backend>(f: &mut Frame<B>, area: Rect, focused: bool) 
     f.render_widget(game_options_tabs, area);
 }
 
-fn render_timer_options<B: Backend>(f: &mut Frame<B>, area: Rect, focused: bool) {
-    let mut timer_options_tabs = Paragraph::new("timer options here")
-        .alignment(Alignment::Right);
+fn render_timer_options<B: Backend>(f: &mut Frame<B>, area: Rect, focused: bool, app: &App) {
+    let options = app.timer_options.iter().cloned().map(Spans::from).collect();
+    let mut timer_options_tabs = Tabs::new(options)
+        .select(app.selected_timer_tab)
+        .highlight_style(Style::default().fg(Color::Green));
 
     let mut b = Block::default()
         .borders(Borders::RIGHT | Borders::TOP | Borders::BOTTOM)
@@ -113,16 +118,16 @@ fn render_timer_options<B: Backend>(f: &mut Frame<B>, area: Rect, focused: bool)
 fn render_header_widgets<B: Backend>(f: &mut Frame<B>, options_area: Rect, timer_area: Rect, app: &App) {
     match app.focused_window {
         FocusedWindow::Game => {
-            render_game_options(f, options_area, false);
-            render_timer_options(f, timer_area, false);
+            render_game_options(f, options_area, false, app);
+            render_timer_options(f, timer_area, false, app);
         },
         FocusedWindow::GameOptions => {
-            render_game_options(f, options_area, true);
-            render_timer_options(f, timer_area, false);
+            render_game_options(f, options_area, true, app);
+            render_timer_options(f, timer_area, false, app);
         },
         FocusedWindow::TimerOptions => {
-            render_game_options(f, options_area, false);
-            render_timer_options(f, timer_area, true);
+            render_game_options(f, options_area, false, app);
+            render_timer_options(f, timer_area, true, app);
         }
     }
 }
