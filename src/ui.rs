@@ -9,6 +9,7 @@ use tui::{
 
 use super::App;
 use super::app::FocusedWindow;
+use super::widgets::alignedtabs::AlignedTabs;
 
 pub fn draw<B: Backend>(f: &mut Frame<B>, app: &mut App) {
     let title_chunk = Block::default()
@@ -99,8 +100,9 @@ fn render_game_options<B: Backend>(f: &mut Frame<B>, area: Rect, focused: bool, 
 
 fn render_timer_options<B: Backend>(f: &mut Frame<B>, area: Rect, focused: bool, app: &App) {
     let options = app.timer_options.iter().cloned().map(Spans::from).collect();
-    let mut timer_options_tabs = Tabs::new(options)
+    let mut timer_options_tabs = AlignedTabs::new(options)
         .select(app.selected_timer_tab)
+        .alignment(Alignment::Right)
         .highlight_style(Style::default().fg(Color::Green));
 
     let mut b = Block::default()

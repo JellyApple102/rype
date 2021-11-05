@@ -15,6 +15,7 @@ use crossterm::{
 
 mod ui;
 mod app;
+mod widgets;
 
 use app::App;
 use app::GameState;
