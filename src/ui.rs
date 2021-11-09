@@ -1,14 +1,17 @@
 use tui::{
     Frame,
     backend::Backend,
-    widgets::{Block, BorderType, Borders, Paragraph, Tabs},
+    widgets::{Block, BorderType, Borders, Paragraph, Tabs, Wrap},
     layout::{Alignment, Rect, Layout, Direction, Constraint},
     style::{Style, Color},
-    text::Spans
+    text::{Spans, Span}
 };
+
+use std::str;
 
 use super::App;
 use super::app::FocusedWindow;
+use super::app::GameState;
 use super::widgets::alignedtabs::AlignedTabs;
 
 pub fn draw<B: Backend>(f: &mut Frame<B>, app: &mut App) {
@@ -63,21 +66,41 @@ pub fn draw<B: Backend>(f: &mut Frame<B>, app: &mut App) {
         )
         .split(chunks[0]);
 
-    render_header_widgets(f, header_chunks[0], header_chunks[1], app);
+    match app.state {
+        GameState::Pre => {
+            render_header_widgets(f, header_chunks[0], header_chunks[1], app);
+            // render_timer(f, timer_chunks[1], app.current_timer);
+            let timer = Paragraph::new("timer here")
+                .style(Style::default().fg(Color::Blue))
+                .alignment(Alignment::Left);
+            f.render_widget(timer, timer_chunks[1]);
 
-    let typing_section = Paragraph::new("type here")
-        // .block(Block::default().borders(Borders::ALL).border_type(BorderType::Rounded))
-        .alignment(Alignment::Left);
-    f.render_widget(typing_section, game_chunks[1]);
+            // let typing_section = Paragraph::new("type here")
+            //     // .block(Block::default().borders(Borders::ALL).border_type(BorderType::Rounded))
+            //     .alignment(Alignment::Left);
+            // f.render_widget(typing_section, game_chunks[1]);
+            render_typing_section(f, game_chunks[1], app);
 
-    let timer = Paragraph::new("timer here")
-        .alignment(Alignment::Left);
-    f.render_widget(timer, timer_chunks[1]);
+            let footer = Paragraph::new("Footer")
+                .block(Block::default().borders(Borders::ALL).border_type(BorderType::Rounded))
+                .alignment(Alignment::Center);
+            f.render_widget(footer, chunks[2]);
+        },
+        GameState::During => {
+            // render_timer(f, timer_chunks[1], app);
+            let timer = Paragraph::new("timer started")
+                .style(Style::default().fg(Color::Blue))
+                .alignment(Alignment::Left);
+            f.render_widget(timer, timer_chunks[1]);
 
-    let footer = Paragraph::new("Footer")
-        .block(Block::default().borders(Borders::ALL).border_type(BorderType::Rounded))
-        .alignment(Alignment::Center);
-    f.render_widget(footer, chunks[2]);
+            // let typing_section = Paragraph::new("type here")
+            //     // .block(Block::default().borders(Borders::ALL).border_type(BorderType::Rounded))
+            //     .alignment(Alignment::Left);
+            // f.render_widget(typing_section, game_chunks[1]);
+            render_typing_section(f, game_chunks[1], app);
+        },
+        GameState::Post => {}
+    }
 }
 
 fn render_game_options<B: Backend>(f: &mut Frame<B>, area: Rect, focused: bool, app: &App) {
@@ -132,4 +155,43 @@ fn render_header_widgets<B: Backend>(f: &mut Frame<B>, options_area: Rect, timer
             render_timer_options(f, timer_area, true, app);
         }
     }
+}
+
+// fn render_timer<B: Backend> (f: &mut Frame<B>, timer_area: Rect, app: &App) {
+//     let timer = Paragraph::new(time.to_string())
+//         .alignment(Alignment::Left);
+//     f.render_widget(timer, timer_area);
+// }
+
+fn render_typing_section<B: Backend> (f: &mut Frame<B>, typing_area: Rect, app: &App) {
+    let text_bytes = app.game_text.as_bytes();
+    let my_text_bytes = app.my_game_text.as_bytes();
+    // let mut start: usize = 0;
+    let mut c_index: usize = 0;
+    let mut para = vec![];
+
+    for (i, b) in my_text_bytes.iter().enumerate() {
+        c_index = i + 1;
+        let c = my_text_bytes[i] as char;
+        let c = c.to_string();
+        if *b == text_bytes[i] {
+            // c_index = i + 1;
+            let s = Span::styled(c, Style::default().fg(Color::Green));
+            // para.pop();
+            para.push(s);
+        } else {
+            // c_index = i + 1;
+            let s = Span::styled(c, Style::default().fg(Color::Red));
+            para.push(s);
+            // start = i;
+        }
+    }
+
+    para.push(Span::styled(str::from_utf8(&text_bytes[c_index..c_index + 1]).unwrap(), Style::default().bg(Color::DarkGray).fg(Color::Black)));
+    para.push(Span::raw(str::from_utf8(&text_bytes[c_index + 1..]).unwrap()));
+
+    let typing_section = Paragraph::new(Spans::from(para))
+        .alignment(Alignment::Left)
+        .wrap(Wrap{ trim: true });
+    f.render_widget(typing_section, typing_area);
 }

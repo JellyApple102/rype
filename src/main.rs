@@ -19,17 +19,19 @@ mod widgets;
 
 use app::App;
 use app::GameState;
+use app::FocusedWindow;
 
-enum Event<I> {
+pub enum Event<I> {
     Input(I),
+    TimerUpdate(u16),
     Tick
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     // check getting list of words
     // this kills compile time - should chek if i can do anything about that
-    // let words: Vec<&str> = include!("words.txt");
-    // println!("{}", words.len());
+    let word_list: Vec<&str> = include!("words.txt");
+    println!("{}", word_list.len());
 
     // basic setup
     let stdout = io::stdout();
@@ -60,7 +62,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     });
 
-    let mut app = App::new();
+    let mut app = App::new(word_list);
 
     // draw loop
     loop {
@@ -76,14 +78,18 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     KeyCode::BackTab => app.cycle_focus_backward(),
                     KeyCode::Left => app.cycle_tab_backward(),
                     KeyCode::Right => app.cycle_tab_forward(),
+                    KeyCode::Enter => if let FocusedWindow::Game = app.focused_window {
+                        app.start_game(&mut terminal);
+                    }
                     _ => {}
                 },
                 GameState::During => match event.code {
                     KeyCode::Esc => {
                         app.should_quit = true;
                     },
-                    KeyCode::Char(c) => {},
-                    KeyCode::Backspace => {},
+                    KeyCode::Char(c) => app.on_char(c),
+                    KeyCode::Backspace => app.on_char('\x08'),
+                    KeyCode::Enter => app.end_game(),
                     _ => {}
                 },
                 GameState::Post => match event.code {
@@ -94,7 +100,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     _ => {}
                 }
             },
-            Event::Tick => {}
+            Event::Tick => {},
+            _ => {}
         }
 
         if app.should_quit {
