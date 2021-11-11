@@ -166,24 +166,21 @@ fn render_header_widgets<B: Backend>(f: &mut Frame<B>, options_area: Rect, timer
 fn render_typing_section<B: Backend> (f: &mut Frame<B>, typing_area: Rect, app: &App) {
     let text_bytes = app.game_text.as_bytes();
     let my_text_bytes = app.my_game_text.as_bytes();
-    // let mut start: usize = 0;
     let mut c_index: usize = 0;
     let mut para = vec![];
 
     for (i, b) in my_text_bytes.iter().enumerate() {
         c_index = i + 1;
-        let c = my_text_bytes[i] as char;
-        let c = c.to_string();
         if *b == text_bytes[i] {
-            // c_index = i + 1;
+            let c = my_text_bytes[i] as char;
+            let c = c.to_string();
             let s = Span::styled(c, Style::default().fg(Color::Green));
-            // para.pop();
             para.push(s);
         } else {
-            // c_index = i + 1;
+            let c = text_bytes[i] as char;
+            let c = c.to_string();
             let s = Span::styled(c, Style::default().fg(Color::Red));
             para.push(s);
-            // start = i;
         }
     }
 

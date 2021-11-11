@@ -59,6 +59,8 @@ impl<'a> App<'a> {
                 } else {
                     self.selected_game_tab = 0;
                 }
+
+                self.game_text = self.gen_test();
             },
             FocusedWindow::TimerOptions => {
                 let tabs_length = self.timer_options.len();
@@ -81,6 +83,8 @@ impl<'a> App<'a> {
                 } else {
                     self.selected_game_tab = tabs_length - 1;
                 }
+
+                self.game_text = self.gen_test();
             },
             FocusedWindow::TimerOptions => {
                 let tabs_length = self.timer_options.len();
@@ -107,6 +111,7 @@ impl<'a> App<'a> {
     pub fn end_game(&mut self) {
         self.my_game_text = "".to_string();
         self.state = GameState::Pre;
+        self.game_text = self.gen_test();
     }
 
     pub fn on_char(&mut self, c: char) {
@@ -125,12 +130,18 @@ impl<'a> App<'a> {
         }
 
         let mut out = "".to_string();
+        let mut last_word = "";
         for _ in 0..500 {
             let mut rng = rand::thread_rng();
             let rand = rng.gen_range(0..=r);
 
+            if self.words[rand] == last_word {
+                continue;
+            }
+
             out.push_str(self.words[rand]);
             out.push(' ');
+            last_word = self.words[rand];
         }
 
         out = out.trim().to_string();
