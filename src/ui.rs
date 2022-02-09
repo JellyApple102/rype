@@ -7,8 +7,6 @@ use tui::{
     text::{Spans, Span}
 };
 
-use std::str;
-
 use super::App;
 use super::app::FocusedWindow;
 use super::app::GameState;
@@ -88,7 +86,7 @@ pub fn draw<B: Backend>(f: &mut Frame<B>, app: &mut App) {
         },
         GameState::During => {
             // render_timer(f, timer_chunks[1], app);
-            let timer = Paragraph::new("timer started")
+            let timer = Paragraph::new(format!("timer started {}", app.cursor_index))
                 .style(Style::default().fg(Color::Blue))
                 .alignment(Alignment::Left);
             f.render_widget(timer, timer_chunks[1]);
@@ -163,29 +161,55 @@ fn render_header_widgets<B: Backend>(f: &mut Frame<B>, options_area: Rect, timer
 //     f.render_widget(timer, timer_area);
 // }
 
-fn render_typing_section<B: Backend> (f: &mut Frame<B>, typing_area: Rect, app: &App) {
-    let text_bytes = app.game_text.as_bytes();
-    let my_text_bytes = app.my_game_text.as_bytes();
+/*
+app maybe has a Vector of 'skipped' words character indexes
+check against this vector when backpace to jump back as needed
+when space in middle of word store index in vector and jump to next word
+fill 'skipped space' with a weird rando bs char? style/render appropriately
+app would need to store cursor index
+*/
+
+fn render_typing_section<B: Backend> (f: &mut Frame<B>, typing_area: Rect, app: &mut App) {
+    let text_bytes: Vec<char> = app.game_text.chars().collect();
+    let my_text_bytes: Vec<char> = app.my_game_text.chars().collect();
     let mut c_index: usize = 0;
     let mut para = vec![];
 
-    for (i, b) in my_text_bytes.iter().enumerate() {
+    for (i, c) in my_text_bytes.iter().enumerate() {
         c_index = i + 1;
-        if *b == text_bytes[i] {
-            let c = my_text_bytes[i] as char;
+        if c == &text_bytes[i] {
+            //let c = my_text_bytes[i] as char;
             let c = c.to_string();
             let s = Span::styled(c, Style::default().fg(Color::Green));
             para.push(s);
+        } else if *c == '\0' {
+            let c = text_bytes[i];
+            let c = c.to_string();
+            let s = Span::styled(c, Style::default().fg(Color::Yellow));
+            para.push(s);
         } else {
-            let c = text_bytes[i] as char;
+            let c = text_bytes[i];
             let c = c.to_string();
             let s = Span::styled(c, Style::default().fg(Color::Red));
             para.push(s);
         }
     }
 
-    para.push(Span::styled(str::from_utf8(&text_bytes[c_index..c_index + 1]).unwrap(), Style::default().bg(Color::DarkGray).fg(Color::Black)));
-    para.push(Span::raw(str::from_utf8(&text_bytes[c_index + 1..]).unwrap()));
+    para.push({
+        let content: String = text_bytes[c_index..c_index + 1].iter().collect();
+        let style = Style::default().bg(Color::DarkGray).fg(Color::Black);
+        Span {
+            content: content.into(),
+            style,
+        }
+    });
+    para.push({
+        let content: String = text_bytes[c_index + 1..].iter().collect();
+        Span {
+            content: content.into(),
+            style: Style::default(),
+        }
+    });
 
     let typing_section = Paragraph::new(Spans::from(para))
         .alignment(Alignment::Left)

@@ -12,7 +12,8 @@ pub struct App<'a> {
     pub timer_options: Vec<&'a str>,
     pub words: Vec<&'a str>,
     pub my_game_text: String,
-    pub game_text: String
+    pub game_text: String,
+    pub cursor_index: usize,
 }
 
 impl<'a> App<'a> {
@@ -27,7 +28,8 @@ impl<'a> App<'a> {
             timer_options: vec!["30", "60", "120"],
             my_game_text: "".to_string(),
             words,
-            game_text: "".to_string()
+            game_text: "".to_string(),
+            cursor_index: 0,
         };
 
         a.game_text = a.gen_test();
@@ -112,13 +114,45 @@ impl<'a> App<'a> {
         self.my_game_text = "".to_string();
         self.state = GameState::Pre;
         self.game_text = self.gen_test();
+        self.cursor_index = 0;
     }
 
     pub fn on_char(&mut self, c: char) {
         if c == '\x08' {
-            self.my_game_text.pop();
+            if !self.my_game_text.is_empty() {
+                let chars: Vec<char> = self.my_game_text.chars().collect();
+                if chars[self.cursor_index - 1] == '\0' {
+                    while self.cursor_index > 0 && chars[self.cursor_index - 1] == '\0' {
+                        self.my_game_text.pop();
+                        self.cursor_index -= 1;
+                    }
+                } else {
+                    self.my_game_text.pop();
+                    self.cursor_index -= 1;
+                }
+            }
+        } else if c == ' ' {
+            let chars: Vec<char> = self.game_text.chars().collect();
+
+            if chars[self.cursor_index] != ' ' {
+                if self.cursor_index == 0 || chars[self.cursor_index - 1] == ' ' {
+                    return;
+                }
+
+                while chars[self.cursor_index + 1] != ' ' {
+                    self.my_game_text.push('\0');
+                    self.cursor_index += 1;
+                }
+                self.my_game_text.push('\0'); // last character on word
+                self.my_game_text.push('\0'); // space fill
+                self.cursor_index += 2;
+            } else {
+                self.my_game_text.push(' ');
+                self.cursor_index += 1;
+            }
         } else {
             self.my_game_text.push(c);
+            self.cursor_index += 1;
         }
     }
 
