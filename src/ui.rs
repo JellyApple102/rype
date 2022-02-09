@@ -161,14 +161,6 @@ fn render_header_widgets<B: Backend>(f: &mut Frame<B>, options_area: Rect, timer
 //     f.render_widget(timer, timer_area);
 // }
 
-/*
-app maybe has a Vector of 'skipped' words character indexes
-check against this vector when backpace to jump back as needed
-when space in middle of word store index in vector and jump to next word
-fill 'skipped space' with a weird rando bs char? style/render appropriately
-app would need to store cursor index
-*/
-
 fn render_typing_section<B: Backend> (f: &mut Frame<B>, typing_area: Rect, app: &mut App) {
     let text_bytes: Vec<char> = app.game_text.chars().collect();
     let my_text_bytes: Vec<char> = app.my_game_text.chars().collect();
