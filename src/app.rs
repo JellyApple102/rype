@@ -157,7 +157,7 @@ impl<'a> App<'a> {
     }
 
     pub fn gen_test(&mut self) -> String {
-        let opt = self.game_options[self.selected_game_tab].to_string().replace("k", "000");
+        let opt = self.game_options[self.selected_game_tab].to_string().replace('k', "000");
         let mut r: usize = opt.parse().unwrap();
         if r > self.words.len() {
             r = self.words.len();

@@ -74,6 +74,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     KeyCode::Esc => {
                         app.should_quit = true;
                     },
+                    KeyCode::Char('q') => {
+                        app.should_quit = true;
+                    }
                     KeyCode::Tab => app.cycle_focus_forward(),
                     KeyCode::BackTab => app.cycle_focus_backward(),
                     KeyCode::Left => app.cycle_tab_backward(),
@@ -96,6 +99,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     KeyCode::Esc => {
                         app.should_quit = true;
                     },
+                    KeyCode::Char('q') => {
+                        app.should_quit = true;
+                    }
                     KeyCode::Enter => {},
                     _ => {}
                 }
